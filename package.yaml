@@ -21,6 +21,8 @@ description:         Please see the README on GitHub at <https://github.com/zepa
 
 dependencies:
 - base >= 4.7 && < 5
+- containers
+- intensional-algebraic-structures
 
 library:
   source-dirs: src
