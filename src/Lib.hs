@@ -1,11 +1,16 @@
 {-# LANGUAGE IntensionalFunctions #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Lib
 (
 ) where
 
+import Control.Intensional
+import Control.Intensional.Applicative
+import Control.Intensional.Functor
+import Control.Intensional.Monad
 import Control.Intensional.Monad.Trans.Coroutine
 import Control.Intensional.Monad.Trans.Coroutine.SuspensionFunctors
 import qualified Data.Set as Set
@@ -28,27 +33,102 @@ More sophisticated engine:
       * Filter is also intensional?
 -}
 
--- newtype EngineT fact m a =
---   EngineT
---     { unEngineT :: CoroutineT ?? m a }
-
 type Computation m fact = CoroutineT Ord (Await Ord fact) m (Set fact)
+type SuspendedComputation m fact = Await Ord fact (Computation m fact)
 
 data Engine m fact = Engine
   { facts :: Set fact
-  , computations :: Set (Computation m fact)
-  , workset :: Set (fact, Computation m fact)
+  , computations :: Set (SuspendedComputation m fact)
+  , workset :: Set (fact, SuspendedComputation m fact)
   }
+
+{-
+intensional Ord do
+  x :<: y <- getFact
+  y' :<: z <- getFact
+  itsGuard $ y == y'
+  itsPure $ x :<: z
+-}
+
+deriving instance (Eq (SuspendedComputation m fact))
+deriving instance (Ord (SuspendedComputation m fact))
 
 deriving instance
   ( Eq fact
-  , (Eq (m (Either ((Await Ord fact) (CoroutineT Ord (Await Ord fact) m (Set fact))) (Set fact))))
+  , Eq (m (Either (SuspendedComputation m fact) (Set fact)))
   ) => Eq (Engine m fact)
 deriving instance
   ( Ord fact
-  , (Ord (m (Either ((Await Ord fact) (CoroutineT Ord (Await Ord fact) m (Set fact))) (Set fact))))
+  , Ord (m (Either (SuspendedComputation m fact) (Set fact)))
   ) => Ord (Engine m fact)
 
-initialize :: (Ord fact, Ord (Computation m fact))
-           => Set fact -> Set (Computation m fact) -> Engine m fact
-initialize = undefined -- TODO
+empty :: Engine m fact
+empty = Engine { facts = Set.empty
+               , computations = Set.empty
+               , workset = Set.empty
+               }
+
+addComputation :: ( Typeable fact
+                  , Ord fact
+                  , Ord (m (Either (SuspendedComputation m fact) (Set fact)))
+                  , IntensionalFunctorCF m ~ Ord
+                  , IntensionalMonad m
+                  , IntensionalApplicativePureC m (Engine m fact)
+                  , IntensionalMonadBindC m
+                          (Either (SuspendedComputation m fact) (Set fact))
+                          (Engine m fact)
+                  )
+               => Computation m fact -> Engine m fact -> m (Engine m fact)
+addComputation computation engine = intensional Ord do
+  result <- resume computation
+  itsPure %$ case result of
+    Left suspended -> addSuspended suspended engine
+    Right factSet -> Set.foldr addFact engine factSet
+
+addFact :: (Ord fact) => fact -> Engine m fact -> Engine m fact
+addFact fact engine =
+  Engine { facts = Set.insert fact $ facts engine
+         , computations = computations engine
+         , workset =
+             Set.union (workset engine) (Set.map (fact,) $ computations engine)
+         }
+
+addSuspended :: ( Ord fact
+                , IntensionalFunctorCF m ~ Ord
+                )
+             => SuspendedComputation m fact
+             -> Engine m fact
+             -> (Engine m fact)
+addSuspended suspended engine =
+  Engine { facts = facts engine
+          , computations = Set.insert suspended $ computations engine
+          , workset = Set.union
+                        (workset engine)
+                        (Set.map (,suspended) $ facts engine)
+          }
+
+isFinished :: Engine m fact -> Bool
+isFinished engine = Set.null $ workset engine
+
+step :: ( Typeable fact
+        , Ord fact
+        , Ord (m (Either (SuspendedComputation m fact) (Set fact)))
+        , Ord (Computation m fact)
+        , IntensionalMonad m
+        , IntensionalFunctorCF m ~ Ord
+        , IntensionalApplicativePureC m (Engine m fact)
+        , IntensionalMonadBindC m
+                (Either (SuspendedComputation m fact) (Set fact))
+                (Engine m fact)
+        )
+     => Engine m fact -> m (Engine m fact)
+step engine =
+  case Set.minView $ workset engine of
+    Nothing -> itsPure %@ engine
+    Just ((fact, Await fn), workset') ->
+      let engine' = engine { workset = workset' } in
+      intensional Ord do
+        result <- resume $ fn %@ fact
+        itsPure %$ case result of
+          Left suspended -> addSuspended suspended engine'
+          Right factSet -> Set.foldr addFact engine' factSet
