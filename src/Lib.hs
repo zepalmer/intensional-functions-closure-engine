@@ -110,6 +110,22 @@ addSuspended suspended engine =
 isFinished :: Engine m fact -> Bool
 isFinished engine = Set.null $ workset engine
 
+{-
+type family IntensionalMonadBindC ...
+
+inferrable IntensionalMonadBindC m a b
+
+step :: ( Typeable fact
+        , Ord fact
+        , Ord (m (Either (SuspendedComputation m fact) (Set fact)))
+        , Ord (Computation m fact)
+        , IntensionalMonad m
+        , IntensionalFunctorCF m ~ Ord
+        , ??
+        )
+     =>
+-}
+
 step :: ( Typeable fact
         , Ord fact
         , Ord (m (Either (SuspendedComputation m fact) (Set fact)))
@@ -132,3 +148,21 @@ step engine =
         itsPure %$ case result of
           Left suspended -> addSuspended suspended engine'
           Right factSet -> Set.foldr addFact engine' factSet
+
+close :: ( Typeable fact
+         , Ord fact
+         , Ord (m (Either (SuspendedComputation m fact) (Set fact)))
+         , Ord (Computation m fact)
+         , IntensionalMonad m
+         , IntensionalFunctorCF m ~ Ord
+         , IntensionalApplicativePureC m (Engine m fact)
+         , IntensionalMonadBindC m
+                 (Either (SuspendedComputation m fact) (Set fact))
+                 (Engine m fact)
+         , IntensionalMonadBindC m (Engine m fact) (Engine m fact)
+         )
+      => Engine m fact -> m (Engine m fact)
+close engine =
+  if isFinished engine then itsPure %@ engine else intensional Ord do
+    engine' <- step engine
+    close engine'
