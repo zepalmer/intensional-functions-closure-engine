@@ -4,7 +4,16 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Lib
-(
+( Computation
+, SuspendedComputation
+, Engine(..)
+, empty
+, addComputation
+, addFact
+, isFinished
+, step
+, close
+, getFact
 ) where
 
 import Control.Intensional
@@ -166,3 +175,25 @@ close engine =
   if isFinished engine then itsPure %@ engine else intensional Ord do
     engine' <- step engine
     close engine'
+
+-- TODO: BEGIN: move this to the library package
+await :: ( Wrappable c
+         , Typeable a
+         , IntensionalMonad m
+         , IntensionalFunctorCF m ~ c
+         , IntensionalApplicativePureC m
+            (Either ((Await c a) (CoroutineT c (Await c a) m a)) a)
+         )
+      => CoroutineT c (Await c a) m a
+await = suspend (Await itsPure) -- TODO: fix suspend to be intensional?
+-- TODO: END: move this to the library package
+
+getFact :: ( Typeable fact
+           , IntensionalMonad m
+           , IntensionalFunctorCF m ~ Ord
+           , IntensionalApplicativePureC m
+              (Either
+                ((Await Ord fact) (CoroutineT Ord (Await Ord fact) m fact))
+                fact)
+           ) => CoroutineT Ord (Await Ord fact) m fact
+getFact = await

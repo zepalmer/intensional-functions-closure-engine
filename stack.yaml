@@ -17,4 +17,4 @@ packages: ["."]
 # Dependency packages to be pulled from upstream that are not in the resolver.
 extra-deps:
   - git: git.bahj.com:intensional-functions-lib
-    commit: cebc4bf38843a420fa2885d517e653206997e4ec
+    commit: dbe82c7d9adfef7a7bfb76758759c441741cca66
