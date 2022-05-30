@@ -4,11 +4,11 @@
 #       use the stock compiler, it'd help to ensure that the packages are
 #       compatible with our GHC.
 resolver:
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/5.yaml
+  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/0.yaml
 
 # Using intensional functions GHC
 # NOTE: This should eventually point to a publicly visible repository.
-compiler: ghc-git-33ff15c660b3694ed0aebdf6bd6a426bdad8c566-quick
+compiler: ghc-git-f179f9ab2dbb7ede6ba45d00aa45c3d8e74352dd-quick
 compiler-repository: git.bahj.com:intensional-functions-ghc
 
 # User packages to be built.
@@ -17,4 +17,4 @@ packages: ["."]
 # Dependency packages to be pulled from upstream that are not in the resolver.
 extra-deps:
   - git: git.bahj.com:intensional-functions-lib
-    commit: dbe82c7d9adfef7a7bfb76758759c441741cca66
+    commit: d0a420dbdbff415a3fa7a848c6ce00e9f7a46d08

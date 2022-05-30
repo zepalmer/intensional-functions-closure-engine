@@ -21,7 +21,7 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Test.HUnit
 
-import Lib
+import Naive
 
 -- TODO: BEGIN: move this to the library package?
 deriving instance (Eq (Await Ord a (CoroutineT Ord (Await Ord a) m a)))
@@ -30,6 +30,17 @@ deriving instance (Ord (Await Ord a (CoroutineT Ord (Await Ord a) m a)))
 
 data Edge = (:~>) Int Int
   deriving (Eq, Ord, Show)
+
+naiveClosure :: Set Edge -> Set Edge
+naiveClosure edgeSet =
+  let edges = Set.toList edgeSet in
+  let edges' = Set.fromList $ do
+    a :~> b <- edges
+    b' :~> c <- edges
+    guard $ b == b'
+    pure $ a :~> c
+  in
+  if edges == edges' then edges' else closure edges'
 
 edgeClosure :: Computation (IntensionalIdentity Ord) Edge
 edgeClosure = intensional Ord do

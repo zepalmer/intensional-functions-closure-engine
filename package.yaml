@@ -4,7 +4,7 @@ github:              "zepalmer/intensional-functions-examples"
 license:             BSD3
 author:              "Zachary Palmer"
 maintainer:          "zep_github@bahj.com"
-copyright:           "2021 Zachary Palmer"
+copyright:           "2021-2022 Zachary Palmer"
 
 extra-source-files:
 - README.md
@@ -20,7 +20,7 @@ synopsis:            A set of examples demonstrating the use of intensional func
 description:         Please see the README on GitHub at <https://github.com/zepalmer/intensional-functions-examples#readme>
 
 dependencies:
-- base >= 4.7 && < 5
+- base >= 4.15 && < 5
 - containers
 - intensional-algebraic-structures
 

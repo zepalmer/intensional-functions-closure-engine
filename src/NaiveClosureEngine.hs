@@ -3,7 +3,17 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Lib
+{-
+This module defines a simple coroutine computation engine.  The engine is
+provided facts and computations which utilize facts.  Stepping on the engine
+causes it to execute computations, executing the coroutines with the various
+different facts at its disposal until closure is reached.  Computations are
+given as intensional monadic expressions under the Ord constraint function.
+Facts are utilized by these computations by binding the getFact expression
+provided by this module.
+-}
+
+module NaiveClosureEngine
 ( Computation
 , SuspendedComputation
 , Engine(..)
@@ -16,31 +26,14 @@ module Lib
 , getFact
 ) where
 
-import Control.Intensional
 import Control.Intensional.Applicative
 import Control.Intensional.Functor
 import Control.Intensional.Monad
 import Control.Intensional.Monad.Trans.Coroutine
 import Control.Intensional.Monad.Trans.Coroutine.SuspensionFunctors
+import Control.Intensional.Runtime
 import qualified Data.Set as Set
 import Data.Set (Set)
-
-{-
-Coroutine engine:
-    * One set of facts (e.g. subtype constraints)
-    * One set of computations (e.g. monadic expression to establish transitivity)
-      * Monadic expression uses await to obtain new facts
-      * Computations both await facts and produce facts (via return)
-      * Intensionality specifically is the key ingredient that lets us make this
-        a *set* and lets us ask whether a "new" await is in fact novel or has
-        already been persued.
-    * Engine uses worklist to operate on Cartesian product of these sets
-      * Engine stops when worklist is empty
-    * Initial sets provided by caller
-More sophisticated engine:
-    * Yield+await where yield signals filter on set of facts
-      * Filter is also intensional?
--}
 
 type Computation m fact = CoroutineT Ord (Await Ord fact) m (Set fact)
 type SuspendedComputation m fact = Await Ord fact (Computation m fact)
@@ -51,25 +44,11 @@ data Engine m fact = Engine
   , workset :: Set (fact, SuspendedComputation m fact)
   }
 
-{-
-intensional Ord do
-  x :<: y <- getFact
-  y' :<: z <- getFact
-  itsGuard $ y == y'
-  itsPure $ x :<: z
--}
-
 deriving instance (Eq (SuspendedComputation m fact))
 deriving instance (Ord (SuspendedComputation m fact))
 
-deriving instance
-  ( Eq fact
-  , Eq (m (Either (SuspendedComputation m fact) (Set fact)))
-  ) => Eq (Engine m fact)
-deriving instance
-  ( Ord fact
-  , Ord (m (Either (SuspendedComputation m fact) (Set fact)))
-  ) => Ord (Engine m fact)
+deriving instance (Eq fact) => Eq (Engine m fact)
+deriving instance (Ord fact) => Ord (Engine m fact)
 
 empty :: Engine m fact
 empty = Engine { facts = Set.empty
@@ -79,7 +58,6 @@ empty = Engine { facts = Set.empty
 
 addComputation :: ( Typeable fact
                   , Ord fact
-                  , Ord (m (Either (SuspendedComputation m fact) (Set fact)))
                   , IntensionalFunctorCF m ~ Ord
                   , IntensionalMonad m
                   , IntensionalApplicativePureC m (Engine m fact)
@@ -88,11 +66,12 @@ addComputation :: ( Typeable fact
                           (Engine m fact)
                   )
                => Computation m fact -> Engine m fact -> m (Engine m fact)
-addComputation computation engine = intensional Ord do
-  result <- resume computation
-  itsPure %$ case result of
-    Left suspended -> addSuspended suspended engine
-    Right factSet -> Set.foldr addFact engine factSet
+addComputation computation engine =
+  intensional Ord do
+    result <- resume computation
+    itsPure %$ case result of
+      Left suspended -> addSuspended suspended engine
+      Right factSet -> Set.foldr addFact engine factSet
 
 addFact :: (Ord fact) => fact -> Engine m fact -> Engine m fact
 addFact fact engine =
@@ -107,7 +86,7 @@ addSuspended :: ( Ord fact
                 )
              => SuspendedComputation m fact
              -> Engine m fact
-             -> (Engine m fact)
+             -> Engine m fact
 addSuspended suspended engine =
   Engine { facts = facts engine
           , computations = Set.insert suspended $ computations engine
@@ -119,26 +98,8 @@ addSuspended suspended engine =
 isFinished :: Engine m fact -> Bool
 isFinished engine = Set.null $ workset engine
 
-{-
-type family IntensionalMonadBindC ...
-
-inferrable IntensionalMonadBindC m a b
-
 step :: ( Typeable fact
         , Ord fact
-        , Ord (m (Either (SuspendedComputation m fact) (Set fact)))
-        , Ord (Computation m fact)
-        , IntensionalMonad m
-        , IntensionalFunctorCF m ~ Ord
-        , ??
-        )
-     =>
--}
-
-step :: ( Typeable fact
-        , Ord fact
-        , Ord (m (Either (SuspendedComputation m fact) (Set fact)))
-        , Ord (Computation m fact)
         , IntensionalMonad m
         , IntensionalFunctorCF m ~ Ord
         , IntensionalApplicativePureC m (Engine m fact)
@@ -160,8 +121,6 @@ step engine =
 
 close :: ( Typeable fact
          , Ord fact
-         , Ord (m (Either (SuspendedComputation m fact) (Set fact)))
-         , Ord (Computation m fact)
          , IntensionalMonad m
          , IntensionalFunctorCF m ~ Ord
          , IntensionalApplicativePureC m (Engine m fact)
@@ -176,18 +135,6 @@ close engine =
     engine' <- step engine
     close engine'
 
--- TODO: BEGIN: move this to the library package
-await :: ( Wrappable c
-         , Typeable a
-         , IntensionalMonad m
-         , IntensionalFunctorCF m ~ c
-         , IntensionalApplicativePureC m
-            (Either ((Await c a) (CoroutineT c (Await c a) m a)) a)
-         )
-      => CoroutineT c (Await c a) m a
-await = suspend (Await itsPure) -- TODO: fix suspend to be intensional?
--- TODO: END: move this to the library package
-
 getFact :: ( Typeable fact
            , IntensionalMonad m
            , IntensionalFunctorCF m ~ Ord
@@ -197,3 +144,10 @@ getFact :: ( Typeable fact
                 fact)
            ) => CoroutineT Ord (Await Ord fact) m fact
 getFact = await
+
+{-
+  intensional Ord do
+    x <- getFact
+    y <- getFact
+    itsPure %$ x + y
+-}
