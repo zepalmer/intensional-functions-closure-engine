@@ -31,7 +31,7 @@ import IndexedClosureEngine.Types
 type MultiMap k v = Map k (Set v)
 
 newtype FMultiMap f k v = FMultiMap (MultiMap k (f v))
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
 newtype IndexingFunctionWrapper
         (fact :: Type)
