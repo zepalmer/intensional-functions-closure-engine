@@ -98,7 +98,22 @@ example = intensional Ord do
     engine' <- ICE.close engine
     itsReturn %$ ICE.facts engine'
 
+example2 :: IntensionalIdentity Ord (Set SubtypeConstraint)
+example2 = intensional Ord do
+    initialEngine <-
+        ICE.addComputation transitivity $
+            ICE.addIndex indexByLowerBound $
+            ICE.addIndex indexByIdentity ICE.empty
+    let engine :: ICE.Engine (IntensionalIdentity Ord) SubtypeConstraint
+        engine =
+          initialEngine
+          & ICE.addFact (poodle :<: poodle)
+    engine' <- ICE.close engine
+    itsReturn %$ ICE.facts engine'
+
 main :: IO ()
 main = do
     let IntensionalIdentity set = example
     putStrLn $ show set
+    let IntensionalIdentity set2 = example2
+    putStrLn $ show set2

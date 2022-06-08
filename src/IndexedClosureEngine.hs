@@ -197,17 +197,22 @@ combineFactWithIndex fact idxfn engine =
     case idxfn %@ fact of
         Nothing -> Nothing
         Just (key, derivative) ->
-            let matchingComputations =
-                    IndexMultiMap.find idxfn key
-                        (indexedComputations engine)
-            in
-            let newWorksetItems =
-                    Set.map
-                        (\(ComputationIndexValue computation) ->
-                            WorksetItem derivative computation)
+            if IndexMultiMap.contains
+                    idxfn key (FactIndexValue derivative) (indexedFacts engine)
+            then
+                Nothing
+            else
+                let matchingComputations =
+                        IndexMultiMap.find idxfn key
+                            (indexedComputations engine)
+                in
+                let newWorksetItems =
                         matchingComputations
-            in
-            Just (key, derivative, newWorksetItems)
+                        & Set.map
+                            (\(ComputationIndexValue computation) ->
+                                WorksetItem derivative computation)
+                in
+                Just (key, derivative, newWorksetItems)
 
 addIndex :: forall fact key derivative m.
             ( Typeable fact
@@ -260,9 +265,6 @@ addIndex idxfn engine =
            , indexedComputations = indexedComputations engine'
            , workset = Set.union newWorksetItems $ workset engine'
            }
-
--- FIXME: in all of these algorithms, are we adding to the workset things that
---        we have already discovered?
 
 addComputation :: forall m fact.
                   ( Typeable fact
@@ -354,25 +356,31 @@ addSuspended suspended engine =
     -- item pairing the derivative with this new computation.
     case suspended of
       SuspendedComputation (EngineSuspensionFunctor idxfn key action) ->
-        let derivatives =
-              engine
-              & indexedFacts
-              & IndexMultiMap.find idxfn key
-        in
-        let newWorksetItems =
-              Set.map
-                (\(FactIndexValue derivative) ->
-                    WorksetItem derivative action)
-                derivatives
-        in
-        Engine { facts = facts engine
-               , indexedFacts = indexedFacts engine
-               , indexedComputations =
-                   indexedComputations engine
-                   & IndexMultiMap.add
-                        idxfn key (ComputationIndexValue action)
-               , workset = Set.union newWorksetItems $ workset engine
-               }
+        if IndexMultiMap.contains
+                idxfn key (ComputationIndexValue action)
+                (indexedComputations engine)
+        then
+            engine
+        else
+            let derivatives =
+                  engine
+                  & indexedFacts
+                  & IndexMultiMap.find idxfn key
+            in
+            let newWorksetItems =
+                  Set.map
+                    (\(FactIndexValue derivative) ->
+                        WorksetItem derivative action)
+                    derivatives
+            in
+            Engine { facts = facts engine
+                   , indexedFacts = indexedFacts engine
+                   , indexedComputations =
+                       indexedComputations engine
+                       & IndexMultiMap.add
+                            idxfn key (ComputationIndexValue action)
+                   , workset = Set.union newWorksetItems $ workset engine
+                   }
 
 isFinished :: Engine m fact -> Bool
 isFinished engine = Set.null $ workset engine

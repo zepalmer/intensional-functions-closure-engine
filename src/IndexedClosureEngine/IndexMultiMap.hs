@@ -10,6 +10,7 @@ module IndexedClosureEngine.IndexMultiMap
 , addIndex
 , add
 , find
+, contains
 , containsIndex
 , fold
 ) where
@@ -128,6 +129,26 @@ containsIndex :: forall fact f key derivative.
               -> Bool
 containsIndex i (IndexMultiMap m) =
     Maybe.isJust $ CDMap2.lookup (IndexingFunctionWrapper i) m
+
+contains :: forall fact f key derivative.
+            ( Typeable fact
+            , Typeable key
+            , Typeable derivative
+            , Ord key
+            , Ord (f derivative)
+            )
+         => IndexingFunction fact key derivative
+         -> key
+         -> f derivative
+         -> IndexMultiMap fact f
+         -> Bool
+contains i k v (IndexMultiMap m) =
+    case CDMap2.lookup (IndexingFunctionWrapper i) m of
+        Nothing -> False
+        Just (FMultiMap d) ->
+            case Map.lookup k d of
+                Nothing -> False
+                Just vs -> Set.member v vs
 
 fold :: forall fact f acc.
         (Typeable fact)
