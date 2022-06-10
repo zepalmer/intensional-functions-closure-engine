@@ -72,15 +72,15 @@ example = intensional Ord do
     initialEngine <- NCE.addComputation transitivity NCE.empty
     let engine :: NCE.Engine (IntensionalIdentity Ord) SubtypeConstraint
         engine =
-          initialEngine
-          & NCE.addFact (poodle :<: dog)
-          & NCE.addFact (wolfhound :<: dog)
-          & NCE.addFact (siamese :<: cat)
-          & NCE.addFact (ragdoll :<: cat)
-          & NCE.addFact (dog :<: mammal)
-          & NCE.addFact (cat :<: mammal)
-          & NCE.addFact (mammal :<: animal)
-          & NCE.addFact (limestone :<: rock)
+          NCE.addFacts [ poodle :<: dog
+                       , wolfhound :<: dog
+                       , siamese :<: cat
+                       , ragdoll :<: cat
+                       , dog :<: mammal
+                       , cat :<: mammal
+                       , mammal :<: animal
+                       , limestone :<: rock
+                       ] initialEngine
     engine' <- NCE.close engine
     itsReturn %$ NCE.facts engine'
 

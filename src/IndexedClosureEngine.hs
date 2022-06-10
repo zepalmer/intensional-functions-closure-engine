@@ -12,6 +12,7 @@ module IndexedClosureEngine
 , addIndex
 , addComputation
 , addFact
+, addFacts
 , isFinished
 , step
 , close
@@ -338,6 +339,13 @@ addFact fact engine =
            , indexedComputations = indexedComputations engine
            , workset = Set.union newWorksetItems $ workset engine
            }
+
+addFacts :: forall m fact.
+            (Typeable fact, Typeable m, Ord fact)
+         => [fact]
+         -> Engine m fact
+         -> Engine m fact
+addFacts facts engine = foldr addFact engine facts
 
 addSuspended :: forall m fact.
                 ( Typeable m

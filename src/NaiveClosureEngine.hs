@@ -20,6 +20,7 @@ module NaiveClosureEngine
 , empty
 , addComputation
 , addFact
+, addFacts
 , isFinished
 , step
 , close
@@ -80,6 +81,9 @@ addFact fact engine =
          , workset =
              Set.union (workset engine) (Set.map (fact,) $ computations engine)
          }
+
+addFacts :: (Ord fact) => [fact] -> Engine m fact -> Engine m fact
+addFacts facts engine = foldr addFact engine facts
 
 addSuspended :: ( Ord fact
                 , IntensionalFunctorCF m ~ Ord

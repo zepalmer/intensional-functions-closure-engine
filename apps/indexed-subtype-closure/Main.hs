@@ -23,8 +23,6 @@ import qualified Data.Set as Set
 
 import qualified IndexedClosureEngine as ICE
 
-import System.IO.Unsafe (unsafePerformIO)
-
 newtype T = T String
     deriving (Eq, Ord)
 
@@ -86,15 +84,15 @@ example = intensional Ord do
             ICE.addIndex indexByIdentity ICE.empty
     let engine :: ICE.Engine (IntensionalIdentity Ord) SubtypeConstraint
         engine =
-          initialEngine
-          & ICE.addFact (poodle :<: dog)
-          & ICE.addFact (wolfhound :<: dog)
-          & ICE.addFact (siamese :<: cat)
-          & ICE.addFact (ragdoll :<: cat)
-          & ICE.addFact (dog :<: mammal)
-          & ICE.addFact (cat :<: mammal)
-          & ICE.addFact (mammal :<: animal)
-          & ICE.addFact (limestone :<: rock)
+          ICE.addFacts [ poodle :<: dog
+                       , wolfhound :<: dog
+                       , siamese :<: cat
+                       , ragdoll :<: cat
+                       , dog :<: mammal
+                       , cat :<: mammal
+                       , mammal :<: animal
+                       , limestone :<: rock
+                       ] initialEngine
     engine' <- ICE.close engine
     itsReturn %$ ICE.facts engine'
 
