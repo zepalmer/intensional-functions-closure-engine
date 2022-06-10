@@ -5,7 +5,6 @@ module Main where
 import Control.Intensional.Monad
 import Control.Intensional.Monad.Identity (IntensionalIdentity(..))
 import Control.Intensional.Runtime
-import Data.Function ((&))
 import Data.Set (Set)
 import qualified Data.Set as Set
 
@@ -40,6 +39,4 @@ example = intensional Ord do
     itsReturn %$ NCE.facts engine'
 
 main :: IO ()
-main = do
-    let IntensionalIdentity set = example
-    putStrLn $ show set
+main = let IntensionalIdentity set = example in putStrLn $ show set

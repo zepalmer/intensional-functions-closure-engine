@@ -2,13 +2,9 @@
 
 module Main where
 
-import Control.Intensional.Functor
-import Control.Intensional.Applicative
-
 import Control.Intensional.Monad
 import Control.Intensional.Monad.Identity (IntensionalIdentity(..))
 import Control.Intensional.Runtime
-import Data.Function ((&))
 import Data.Set (Set)
 import qualified Data.Set as Set
 
@@ -22,9 +18,7 @@ indexByIdentity = \%Ord a -> Just ((), a)
 indexByLowerBound :: ICE.IndexingFunction SubtypeConstraint String String
 indexByLowerBound = \%Ord (a :<: b) -> Just (a, b)
 
-transitivity :: ICE.Computation
-                    (IntensionalIdentity Ord)
-                    SubtypeConstraint
+transitivity :: ICE.Computation (IntensionalIdentity Ord) SubtypeConstraint
 transitivity = intensional Ord do
     (a :<: b) <- ICE.getIndexedFact indexByIdentity ()
     c <- ICE.getIndexedFact indexByLowerBound b
@@ -51,6 +45,4 @@ example = intensional Ord do
     itsReturn %$ ICE.facts engine'
 
 main :: IO ()
-main = do
-    let IntensionalIdentity set = example
-    putStrLn $ show set
+main = let IntensionalIdentity set = example in putStrLn $ show set
