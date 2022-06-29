@@ -5,10 +5,10 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module IndexedClosureEngine
+module Closure.Intensional.Indexed.Engine
 ( Computation
 , Engine(..)
-, empty
+, emptyEngine
 , addIndex
 , addComputation
 , addFact
@@ -35,9 +35,9 @@ import qualified Data.Set as Set
 import Data.Set (Set)
 import Data.Typeable (Typeable, eqT, typeOf, (:~:)(..))
 
-import qualified IndexedClosureEngine.IndexMultiMap as IndexMultiMap
-import IndexedClosureEngine.IndexMultiMap (IndexMultiMap)
-import IndexedClosureEngine.Types
+import qualified Closure.Intensional.Indexed.IndexMultiMap as IndexMultiMap
+import Closure.Intensional.Indexed.IndexMultiMap (IndexMultiMap)
+import Closure.Intensional.Indexed.Types
 
 {-
 This module defines an *indexed* coroutine computation engine.  Similar to the
@@ -174,12 +174,12 @@ data Engine m fact = Engine
 deriving instance (Typeable m, Typeable fact, Eq fact) => Eq (Engine m fact)
 deriving instance (Typeable m, Typeable fact, Ord fact) => Ord (Engine m fact)
 
-empty :: Engine m fact
-empty = Engine { facts = Set.empty
-               , indexedFacts = IndexMultiMap.empty
-               , indexedComputations = IndexMultiMap.empty
-               , workset = Set.empty
-               }
+emptyEngine :: Engine m fact
+emptyEngine = Engine { facts = Set.empty
+                     , indexedFacts = IndexMultiMap.empty
+                     , indexedComputations = IndexMultiMap.empty
+                     , workset = Set.empty
+                     }
 
 combineFactWithIndex :: forall fact key derivative m.
                         ( Typeable fact

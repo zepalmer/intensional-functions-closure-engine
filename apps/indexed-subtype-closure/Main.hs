@@ -21,7 +21,7 @@ import Data.Function ((&))
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-import qualified IndexedClosureEngine as ICE
+import Closure.Intensional.Indexed.Engine
 
 newtype T = T String
     deriving (Eq, Ord)
@@ -62,29 +62,29 @@ data SubtypeConstraint = (:<:) T T
 instance Show SubtypeConstraint where
     show (T a :<: T b) = a ++ " <: " ++ b
 
-indexByIdentity :: ICE.IndexingFunction SubtypeConstraint () SubtypeConstraint
+indexByIdentity :: IndexingFunction SubtypeConstraint () SubtypeConstraint
 indexByIdentity = \%Ord a -> Just ((), a)
 
-indexByLowerBound :: ICE.IndexingFunction SubtypeConstraint T T
+indexByLowerBound :: IndexingFunction SubtypeConstraint T T
 indexByLowerBound = \%Ord (a :<: b) -> Just (a, b)
 
-transitivity :: ICE.Computation
+transitivity :: Computation
                     (IntensionalIdentity Ord)
                     SubtypeConstraint
 transitivity = intensional Ord do
-    (a :<: b) <- ICE.getIndexedFact indexByIdentity ()
-    c <- ICE.getIndexedFact indexByLowerBound b
+    (a :<: b) <- getIndexedFact indexByIdentity ()
+    c <- getIndexedFact indexByLowerBound b
     itsReturn %@ Set.singleton (a :<: c)
 
 example :: IntensionalIdentity Ord (Set SubtypeConstraint)
 example = intensional Ord do
     initialEngine <-
-        ICE.addComputation transitivity $
-            ICE.addIndex indexByLowerBound $
-            ICE.addIndex indexByIdentity ICE.empty
-    let engine :: ICE.Engine (IntensionalIdentity Ord) SubtypeConstraint
+        addComputation transitivity $
+            addIndex indexByLowerBound $
+            addIndex indexByIdentity emptyEngine
+    let engine :: Engine (IntensionalIdentity Ord) SubtypeConstraint
         engine =
-          ICE.addFacts [ poodle :<: dog
+          addFacts [ poodle :<: dog
                        , wolfhound :<: dog
                        , siamese :<: cat
                        , ragdoll :<: cat
@@ -93,21 +93,21 @@ example = intensional Ord do
                        , mammal :<: animal
                        , limestone :<: rock
                        ] initialEngine
-    engine' <- ICE.close engine
-    itsReturn %$ ICE.facts engine'
+    engine' <- close engine
+    itsReturn %$ facts engine'
 
 example2 :: IntensionalIdentity Ord (Set SubtypeConstraint)
 example2 = intensional Ord do
     initialEngine <-
-        ICE.addComputation transitivity $
-            ICE.addIndex indexByLowerBound $
-            ICE.addIndex indexByIdentity ICE.empty
-    let engine :: ICE.Engine (IntensionalIdentity Ord) SubtypeConstraint
+        addComputation transitivity $
+            addIndex indexByLowerBound $
+            addIndex indexByIdentity emptyEngine
+    let engine :: Engine (IntensionalIdentity Ord) SubtypeConstraint
         engine =
           initialEngine
-          & ICE.addFact (poodle :<: poodle)
-    engine' <- ICE.close engine
-    itsReturn %$ ICE.facts engine'
+          & addFact (poodle :<: poodle)
+    engine' <- close engine
+    itsReturn %$ facts engine'
 
 main :: IO ()
 main = do

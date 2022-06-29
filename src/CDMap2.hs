@@ -38,11 +38,11 @@
 --       it'd be difficult to use in this case even if we could make it
 --       readable.
 
-module IndexedClosureEngine.CDMap2
+module CDMap2
 ( CDMap2
 , empty
 , insert
-, IndexedClosureEngine.CDMap2.lookup
+, CDMap2.lookup
 , contains
 , fold
 ) where

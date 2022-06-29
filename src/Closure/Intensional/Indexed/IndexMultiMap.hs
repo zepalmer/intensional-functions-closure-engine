@@ -3,7 +3,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module IndexedClosureEngine.IndexMultiMap
+module Closure.Intensional.Indexed.IndexMultiMap
 ( IndexMultiMap
 , FMultiMap(..)
 , empty
@@ -23,9 +23,9 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Typeable (Typeable, cast, typeOf, eqT, (:~:)(..))
 
-import qualified IndexedClosureEngine.CDMap2 as CDMap2
-import IndexedClosureEngine.CDMap2 (CDMap2)
-import IndexedClosureEngine.Types
+import Closure.Intensional.Indexed.Types
+import qualified CDMap2 as CDMap2
+import CDMap2 (CDMap2)
 
 -- ---------- External interface ----------------------------------------------
 

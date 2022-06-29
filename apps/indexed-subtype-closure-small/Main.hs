@@ -8,31 +8,31 @@ import Control.Intensional.Runtime
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-import qualified IndexedClosureEngine as ICE
+import Closure.Intensional.Indexed.Engine
 
 data SubtypeConstraint = (:<:) String String deriving (Eq, Ord, Show)
 
-indexByIdentity :: ICE.IndexingFunction SubtypeConstraint () SubtypeConstraint
+indexByIdentity :: IndexingFunction SubtypeConstraint () SubtypeConstraint
 indexByIdentity = \%Ord a -> Just ((), a)
 
-indexByLowerBound :: ICE.IndexingFunction SubtypeConstraint String String
+indexByLowerBound :: IndexingFunction SubtypeConstraint String String
 indexByLowerBound = \%Ord (a :<: b) -> Just (a, b)
 
-transitivity :: ICE.Computation (IntensionalIdentity Ord) SubtypeConstraint
+transitivity :: Computation (IntensionalIdentity Ord) SubtypeConstraint
 transitivity = intensional Ord do
-    (a :<: b) <- ICE.getIndexedFact indexByIdentity ()
-    c <- ICE.getIndexedFact indexByLowerBound b
+    (a :<: b) <- getIndexedFact indexByIdentity ()
+    c <- getIndexedFact indexByLowerBound b
     itsReturn %@ Set.singleton (a :<: c)
 
 example :: IntensionalIdentity Ord (Set SubtypeConstraint)
 example = intensional Ord do
     initialEngine <-
-        ICE.addComputation transitivity $
-            ICE.addIndex indexByLowerBound $
-            ICE.addIndex indexByIdentity ICE.empty
-    let engine :: ICE.Engine (IntensionalIdentity Ord) SubtypeConstraint
+        addComputation transitivity $
+            addIndex indexByLowerBound $
+            addIndex indexByIdentity emptyEngine
+    let engine :: Engine (IntensionalIdentity Ord) SubtypeConstraint
         engine =
-          ICE.addFacts [ "poodle" :<: "dog"
+          addFacts [ "poodle" :<: "dog"
                        , "wolfhound" :<: "dog"
                        , "siamese" :<: "cat"
                        , "ragdoll" :<: "cat"
@@ -41,8 +41,8 @@ example = intensional Ord do
                        , "mammal" :<: "animal"
                        , "limestone" :<: "rock"
                        ] initialEngine
-    engine' <- ICE.close engine
-    itsReturn %$ ICE.facts engine'
+    engine' <- close engine
+    itsReturn %$ facts engine'
 
 main :: IO ()
 main = let IntensionalIdentity set = example in putStrLn $ show set

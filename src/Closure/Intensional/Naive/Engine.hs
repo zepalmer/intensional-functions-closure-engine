@@ -13,11 +13,11 @@ Facts are utilized by these computations by binding the getFact expression
 provided by this module.
 -}
 
-module NaiveClosureEngine
+module Closure.Intensional.Naive.Engine
 ( Computation
 , SuspendedComputation
 , Engine(..)
-, empty
+, emptyEngine
 , addComputation
 , addFact
 , addFacts
@@ -51,11 +51,11 @@ deriving instance (Ord (SuspendedComputation m fact))
 deriving instance (Eq fact) => Eq (Engine m fact)
 deriving instance (Ord fact) => Ord (Engine m fact)
 
-empty :: Engine m fact
-empty = Engine { facts = Set.empty
-               , computations = Set.empty
-               , workset = Set.empty
-               }
+emptyEngine :: Engine m fact
+emptyEngine = Engine { facts = Set.empty
+                     , computations = Set.empty
+                     , workset = Set.empty
+                     }
 
 addComputation :: ( Typeable fact
                   , Ord fact

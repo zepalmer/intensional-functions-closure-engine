@@ -17,7 +17,7 @@ import Data.Function ((&))
 import Data.Set (Set)
 import qualified Data.Set as Set
 
-import qualified NaiveClosureEngine as NCE
+import Closure.Intensional.Naive.Engine
 
 newtype T = T String
     deriving (Eq, Ord)
@@ -58,10 +58,10 @@ data SubtypeConstraint = (:<:) T T
 instance Show SubtypeConstraint where
     show (T a :<: T b) = a ++ " <: " ++ b
 
-transitivity :: NCE.Computation (IntensionalIdentity Ord) SubtypeConstraint
+transitivity :: Computation (IntensionalIdentity Ord) SubtypeConstraint
 transitivity = intensional Ord do
-    (a :<: b) <- NCE.getFact
-    (c :<: d) <- NCE.getFact
+    (a :<: b) <- getFact
+    (c :<: d) <- getFact
     if b == c then
         itsReturn %@ Set.singleton (a :<: d)
     else
@@ -69,20 +69,20 @@ transitivity = intensional Ord do
 
 example :: IntensionalIdentity Ord (Set SubtypeConstraint)
 example = intensional Ord do
-    initialEngine <- NCE.addComputation transitivity NCE.empty
-    let engine :: NCE.Engine (IntensionalIdentity Ord) SubtypeConstraint
+    initialEngine <- addComputation transitivity emptyEngine
+    let engine :: Engine (IntensionalIdentity Ord) SubtypeConstraint
         engine =
-          NCE.addFacts [ poodle :<: dog
-                       , wolfhound :<: dog
-                       , siamese :<: cat
-                       , ragdoll :<: cat
-                       , dog :<: mammal
-                       , cat :<: mammal
-                       , mammal :<: animal
-                       , limestone :<: rock
-                       ] initialEngine
-    engine' <- NCE.close engine
-    itsReturn %$ NCE.facts engine'
+          addFacts [ poodle :<: dog
+                   , wolfhound :<: dog
+                   , siamese :<: cat
+                   , ragdoll :<: cat
+                   , dog :<: mammal
+                   , cat :<: mammal
+                   , mammal :<: animal
+                   , limestone :<: rock
+                   ] initialEngine
+    engine' <- close engine
+    itsReturn %$ facts engine'
 
 main :: IO ()
 main = do
