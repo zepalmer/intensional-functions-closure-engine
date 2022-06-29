@@ -28,36 +28,36 @@ library:
   source-dirs: src
 
 executables:
-  naive-subtype-closure:
+  intensional-naive-subtype-closure:
     main:                Main.hs
-    source-dirs:         apps/naive-subtype-closure
+    source-dirs:         apps/intensional-naive-subtype-closure
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - intensional-functions-examples
-  naive-subtype-closure-small:
+  intensional-naive-subtype-closure-small:
     main:                Main.hs
-    source-dirs:         apps/naive-subtype-closure-small
+    source-dirs:         apps/intensional-naive-subtype-closure-small
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - intensional-functions-examples
-  indexed-subtype-closure:
+  intensional-indexed-subtype-closure:
     main:                Main.hs
-    source-dirs:         apps/indexed-subtype-closure
+    source-dirs:         apps/intensional-indexed-subtype-closure
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - intensional-functions-examples
-  indexed-subtype-closure-small:
+  intensional-indexed-subtype-closure-small:
     main:                Main.hs
-    source-dirs:         apps/indexed-subtype-closure-small
+    source-dirs:         apps/intensional-indexed-subtype-closure-small
     ghc-options:
     - -threaded
     - -rtsopts
