@@ -21,7 +21,7 @@ module Closure.Intensional.Naive.Engine
 , addComputation
 , addFact
 , addFacts
-, isFinished
+, isClosed
 , step
 , close
 , getFact
@@ -99,8 +99,8 @@ addSuspended suspended engine =
                         (Set.map (,suspended) $ facts engine)
           }
 
-isFinished :: Engine m fact -> Bool
-isFinished engine = Set.null $ workset engine
+isClosed :: Engine m fact -> Bool
+isClosed engine = Set.null $ workset engine
 
 step :: ( Typeable fact
         , Ord fact
@@ -135,7 +135,7 @@ close :: ( Typeable fact
          )
       => Engine m fact -> m (Engine m fact)
 close engine =
-  if isFinished engine then itsPure %@ engine else intensional Ord do
+  if isClosed engine then itsPure %@ engine else intensional Ord do
     engine' <- step engine
     close engine'
 

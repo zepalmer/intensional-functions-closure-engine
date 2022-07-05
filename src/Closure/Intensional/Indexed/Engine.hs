@@ -13,7 +13,7 @@ module Closure.Intensional.Indexed.Engine
 , addComputation
 , addFact
 , addFacts
-, isFinished
+, isClosed
 , step
 , close
 , getIndexedFact
@@ -183,10 +183,8 @@ emptyEngine = Engine { facts = Set.empty
 
 combineFactWithIndex :: forall fact key derivative m.
                         ( Typeable fact
-                        , Typeable key
-                        , Typeable derivative
+                        , Typeable (key, derivative)
                         , Typeable m
-                        , Ord fact
                         , Ord key
                         , Ord derivative
                         )
@@ -305,15 +303,14 @@ addFact fact engine =
     let folder :: forall key derivative.
                   ( Typeable (IndexingFunction fact key derivative)
                   , Typeable
-                      (IndexMultiMap.FMultiMap FactIndexValue key derivative)
-                  , Typeable key
-                  , Typeable derivative
+                      (IndexMultiMap.FMultiMap FactIndexValue (key,derivative))
+                  , Typeable (key, derivative)
                   , Ord key
                   , Ord derivative
                   )
                => (IndexMultiMap fact FactIndexValue, Set (WorksetItem m fact))
                -> IndexingFunction fact key derivative
-               -> IndexMultiMap.FMultiMap FactIndexValue key derivative
+               -> IndexMultiMap.FMultiMap FactIndexValue (key, derivative)
                -> (IndexMultiMap fact FactIndexValue, Set (WorksetItem m fact))
         folder (newFactIndexMap, newWorksetItems) idxfn factMappings =
             case combineFactWithIndex fact idxfn engine of
@@ -390,8 +387,8 @@ addSuspended suspended engine =
                    , workset = Set.union newWorksetItems $ workset engine
                    }
 
-isFinished :: Engine m fact -> Bool
-isFinished engine = Set.null $ workset engine
+isClosed :: Engine m fact -> Bool
+isClosed engine = Set.null $ workset engine
 
 step :: forall m fact.
         ( Typeable fact
@@ -431,7 +428,7 @@ close :: ( Typeable fact
          )
       => Engine m fact -> m (Engine m fact)
 close engine =
-  if isFinished engine then itsPure %@ engine else intensional Ord do
+  if isClosed engine then itsPure %@ engine else intensional Ord do
     engine' <- step engine
     close engine'
 
