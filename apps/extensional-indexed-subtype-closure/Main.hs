@@ -13,15 +13,13 @@ import Closure.Extensional.Indexed.Engine
 
 data SubtypeConstraint = (:<:) String String deriving (Eq, Ord, Show)
 
-data IdentityIndex = IdentityIndex
-    deriving (Eq, Ord)
+data IdentityIndex = IdentityIndex deriving (Eq, Ord)
 instance Index SubtypeConstraint IdentityIndex where
     type IndexKey SubtypeConstraint IdentityIndex = ()
     type IndexDerivative SubtypeConstraint IdentityIndex = SubtypeConstraint
     index IdentityIndex c = Just ((), c)
 
-data LowerBoundIndex = LowerBoundIndex
-    deriving (Eq, Ord)
+data LowerBoundIndex = LowerBoundIndex deriving (Eq, Ord)
 instance Index SubtypeConstraint LowerBoundIndex where
     type IndexKey SubtypeConstraint LowerBoundIndex = String
     type IndexDerivative SubtypeConstraint LowerBoundIndex = String
