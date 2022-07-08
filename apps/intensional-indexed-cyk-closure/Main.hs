@@ -11,39 +11,32 @@ import qualified Data.Set as Set
 import Closure.Intensional.Indexed.Engine
 
 type Nonterminal = String
-data GrammarRule = NonterminalRule Nonterminal Nonterminal Nonterminal
-    deriving (Eq, Ord, Show)
-data ParsedSpan = ParsedSpan Nonterminal Int Int
-    deriving (Eq, Ord, Show)
-
-data Fact = GrammarFact GrammarRule | ParsedFact ParsedSpan
+data Fact = GrammarRule Nonterminal Nonterminal Nonterminal
+          | ParsedSpan Nonterminal Int Int
     deriving (Eq, Ord, Show)
 
-indexParsedSpans :: IndexingFunction Fact () ParsedSpan
+indexParsedSpans :: IndexingFunction Fact () (Nonterminal, Int, Int)
 indexParsedSpans = \%Ord fact -> case fact of
-    GrammarFact _ -> Nothing
-    ParsedFact parsedSpan -> Just ((), parsedSpan)
+    GrammarRule {} -> Nothing
+    ParsedSpan t i j -> Just ((), (t,i,j))
 
-indexParsedSpansByStartPosition :: IndexingFunction Fact Int (Nonterminal,Int)
+indexParsedSpansByStartPosition :: IndexingFunction Fact Int (Nonterminal, Int)
 indexParsedSpansByStartPosition = \%Ord fact -> case fact of
-    GrammarFact _ -> Nothing
-    ParsedFact (ParsedSpan t i j) -> Just (i, (t,j))
+    GrammarRule {} -> Nothing
+    ParsedSpan t i j -> Just (i, (t,j))
 
 indexGrammarRulesByProduction :: IndexingFunction Fact
-                                    (Nonterminal,Nonterminal) Nonterminal
+                                    (Nonterminal, Nonterminal) Nonterminal
 indexGrammarRulesByProduction = \%Ord fact -> case fact of
-    GrammarFact (NonterminalRule x y z) -> Just ((y, z), x)
-    ParsedFact _ -> Nothing
+    GrammarRule x y z -> Just ((y, z), x)
+    ParsedSpan {} -> Nothing
 
---
--- parsed(X,I,K) :- parsed(Y,I,J), parsed(Z,J,K), grammarNT(X,Y,Z)
---
 closure :: Computation (IntensionalIdentity Ord) Fact
 closure = intensional Ord do
-    ParsedSpan y i j <- getIndexedFact indexParsedSpans ()
+    (y, i, j) <- getIndexedFact indexParsedSpans ()
     (z, k) <- getIndexedFact indexParsedSpansByStartPosition j
     x <- getIndexedFact indexGrammarRulesByProduction (y,z)
-    itsReturn %@ Set.singleton (ParsedFact $ ParsedSpan x i k)
+    itsReturn %@ Set.singleton (ParsedSpan x i k)
 
 example :: IntensionalIdentity Ord (Set Fact)
 example = intensional Ord do
@@ -53,14 +46,14 @@ example = intensional Ord do
                         addIndex indexGrammarRulesByProduction $ emptyEngine
     let engine :: Engine (IntensionalIdentity Ord) Fact
         engine =
-          addFacts [ GrammarFact $ NonterminalRule "AddL" "int" "+"
-                   , GrammarFact $ NonterminalRule "Add" "AddL" "int"
-                   , GrammarFact $ NonterminalRule "AddL" "Add" "+"
-                   , ParsedFact $ ParsedSpan "int" 0 1
-                   , ParsedFact $ ParsedSpan "+" 1 2
-                   , ParsedFact $ ParsedSpan "int" 2 3
-                   , ParsedFact $ ParsedSpan "+" 3 4
-                   , ParsedFact $ ParsedSpan "int" 4 5
+          addFacts [ GrammarRule "AddL" "int" "+"
+                   , GrammarRule "Add" "AddL" "int"
+                   , GrammarRule "AddL" "Add" "+"
+                   , ParsedSpan "int" 0 1
+                   , ParsedSpan "+" 1 2
+                   , ParsedSpan "int" 2 3
+                   , ParsedSpan "+" 3 4
+                   , ParsedSpan "int" 4 5
                    ]
           initialEngine
     engine' <- close engine
