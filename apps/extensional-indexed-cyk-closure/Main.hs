@@ -71,18 +71,16 @@ example = do
                         addIndex IndexParsedSpans $
                         addIndex IndexParsedSpansByStartPosition $
                         addIndex IndexGrammarRulesByProduction $ emptyEngine
-    let engine :: Engine Identity Fact
-        engine =
-          addFacts [ GrammarRule "AddL" "int" "+"
-                   , GrammarRule "Add" "AddL" "int"
-                   , GrammarRule "AddL" "Add" "+"
-                   , ParsedSpan "int" 0 1
-                   , ParsedSpan "+" 1 2
-                   , ParsedSpan "int" 2 3
-                   , ParsedSpan "+" 3 4
-                   , ParsedSpan "int" 4 5
-                   ]
-          initialEngine
+    let engine = addFacts [ GrammarRule "AddL" "int" "+"
+                          , GrammarRule "Add" "AddL" "int"
+                          , GrammarRule "AddL" "Add" "+"
+                          , ParsedSpan "int" 0 1
+                          , ParsedSpan "+" 1 2
+                          , ParsedSpan "int" 2 3
+                          , ParsedSpan "+" 3 4
+                          , ParsedSpan "int" 4 5
+                          ]
+                          initialEngine
     engine' <- close engine
     return $ facts engine'
 
