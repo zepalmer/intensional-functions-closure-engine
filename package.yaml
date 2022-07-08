@@ -73,6 +73,15 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - intensional-functions-examples
+  extensional-indexed-cyk-closure:
+    main:                Main.hs
+    source-dirs:         apps/extensional-indexed-cyk-closure
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - intensional-functions-examples
 
 tests:
   intensional-functions-examples-test:
