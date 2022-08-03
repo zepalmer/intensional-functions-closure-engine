@@ -3,11 +3,12 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Main where
+module Tests.Extensional.Indexed.SubtypeClosure where
 
 import Data.Functor.Identity (Identity(..))
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Test.HUnit
 
 import Closure.Extensional.Indexed.Engine
 
@@ -64,5 +65,29 @@ example = do
     engine' <- close engine
     return $ facts engine'
 
-main :: IO ()
-main = let Identity set = example in putStrLn $ show set
+tests :: Test
+tests =
+  TestLabel "extensional indexed subtype closure" $ TestCase $
+    assertEqual "for extensional indexed subtype closure"
+        (Set.fromList
+            [ "cat" :<: "animal"
+            , "cat" :<: "mammal"
+            , "dog" :<: "animal"
+            , "dog" :<: "mammal"
+            , "limestone" :<: "rock"
+            , "mammal" :<: "animal"
+            , "poodle" :<: "animal"
+            , "poodle" :<: "dog"
+            , "poodle" :<: "mammal"
+            , "ragdoll" :<: "animal"
+            , "ragdoll" :<: "cat"
+            , "ragdoll" :<: "mammal"
+            , "siamese" :<: "animal"
+            , "siamese" :<: "cat"
+            , "siamese" :<: "mammal"
+            , "wolfhound" :<: "animal"
+            , "wolfhound" :<: "dog"
+            , "wolfhound" :<: "mammal"
+            ]
+        )
+        (let Identity facts = example in facts)

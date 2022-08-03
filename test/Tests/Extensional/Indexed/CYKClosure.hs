@@ -3,11 +3,12 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Main where
+module Tests.Extensional.Indexed.CYKClosure where
 
 import Data.Functor.Identity (Identity(..))
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Test.HUnit
 
 import Closure.Extensional.Indexed.Engine
 
@@ -84,5 +85,25 @@ example = do
     engine' <- close engine
     return $ facts engine'
 
-main :: IO ()
-main = let Identity set = example in putStrLn $ show set
+tests :: Test
+tests =
+  TestLabel "extensional indexed CYK closure" $ TestCase $
+    assertEqual "for extensional indexed CYK closure"
+        (Set.fromList
+            [ GrammarRule "AddL" "int" "+"
+            , GrammarRule "Add" "AddL" "int"
+            , GrammarRule "AddL" "Add" "+"
+            , ParsedSpan "int" 0 1
+            , ParsedSpan "AddL" 0 2
+            , ParsedSpan "Add" 0 3
+            , ParsedSpan "AddL" 0 4
+            , ParsedSpan "Add" 0 5
+            , ParsedSpan "+" 1 2
+            , ParsedSpan "int" 2 3
+            , ParsedSpan "AddL" 2 4
+            , ParsedSpan "Add" 2 5
+            , ParsedSpan "+" 3 4
+            , ParsedSpan "int" 4 5
+            ]
+        )
+        (let Identity facts = example in facts)

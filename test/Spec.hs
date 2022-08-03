@@ -6,23 +6,25 @@
 
 module Main where
 
-import qualified GraphTests
 import Test.HUnit
 
--- FIXME: the Engine apparently has the monad on the *wrong side*: if we make
---        m a nondeterminism monad, we get nondeterminism over coroutines and
---        not coroutines over nondeterminism.  The engine would have to be
---        modified to support providing it a transformer so that it could work
---        with transformed suspended computations.  Note that this can lead to
---        infinite streams of suspended computations being produced in a
---        starvation kind of way: the computations have to be cooperative or
---        they could starve the engine since the engine doesn't even know that
---        the transformer is doing any of this and essentially runs it until
---        all of its current paths of exploration suspend willingly.
+import qualified Tests.Extensional.Indexed.CYKClosure
+import qualified Tests.Extensional.Indexed.SubtypeClosure
+import qualified Tests.Graph
+import qualified Tests.Intensional.Indexed.CYKClosure
+import qualified Tests.Intensional.Indexed.SubtypeClosure
+import qualified Tests.Intensional.Naive.CYKClosure
+import qualified Tests.Intensional.Naive.SubtypeClosure
 
 tests :: Test
 tests = TestList
-  [ GraphTests.tests
+  [ Tests.Extensional.Indexed.CYKClosure.tests
+  , Tests.Extensional.Indexed.SubtypeClosure.tests
+  , Tests.Graph.tests
+  , Tests.Intensional.Indexed.CYKClosure.tests
+  , Tests.Intensional.Indexed.SubtypeClosure.tests
+  , Tests.Intensional.Naive.CYKClosure.tests
+  , Tests.Intensional.Naive.SubtypeClosure.tests
   ]
 
 main :: IO ()

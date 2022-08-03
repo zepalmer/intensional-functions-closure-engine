@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module GraphTests
+module Tests.Graph
 ( tests
 ) where
 
@@ -15,13 +15,14 @@ import Control.Intensional.Monad.Identity
 import Control.Intensional.Monad.Trans.Coroutine
 import Control.Intensional.Monad.Trans.Coroutine.SuspensionFunctors
 import Control.Intensional.Runtime
+import Control.Monad (guard)
 import Data.Function
 import qualified Data.List as List
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Test.HUnit
 
-import Naive
+import Closure.Intensional.Naive.Engine
 
 -- TODO: BEGIN: move this to the library package?
 deriving instance (Eq (Await Ord a (CoroutineT Ord (Await Ord a) m a)))
@@ -35,12 +36,12 @@ naiveClosure :: Set Edge -> Set Edge
 naiveClosure edgeSet =
   let edges = Set.toList edgeSet in
   let edges' = Set.fromList $ do
-    a :~> b <- edges
-    b' :~> c <- edges
-    guard $ b == b'
-    pure $ a :~> c
+        (a :~> b) <- edges
+        (b' :~> c) <- edges
+        guard $ b == b'
+        pure $ a :~> c
   in
-  if edges == edges' then edges' else closure edges'
+  if edgeSet == edges' then edges' else naiveClosure edges'
 
 edgeClosure :: Computation (IntensionalIdentity Ord) Edge
 edgeClosure = intensional Ord do
@@ -52,7 +53,7 @@ performGraphClosure :: Set Edge -> Set Edge
 performGraphClosure edges =
   let IntensionalIdentity engine =
         intensional Ord do
-          engine1 <- addComputation edgeClosure empty
+          engine1 <- addComputation edgeClosure emptyEngine
           let engine1' = foldr addFact engine1 $ Set.toList edges
           close engine1'
   in

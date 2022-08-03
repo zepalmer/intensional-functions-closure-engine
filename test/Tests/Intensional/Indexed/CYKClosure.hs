@@ -1,12 +1,13 @@
 {-# LANGUAGE IntensionalFunctions #-}
 
-module Main where
+module Tests.Intensional.Indexed.CYKClosure where
 
 import Control.Intensional.Monad
 import Control.Intensional.Monad.Identity (IntensionalIdentity(..))
 import Control.Intensional.Runtime
 import Data.Set (Set)
 import qualified Data.Set as Set
+import Test.HUnit
 
 import Closure.Intensional.Indexed.Engine
 
@@ -57,5 +58,25 @@ example = intensional Ord do
     engine' <- close engine
     itsReturn %$ facts engine'
 
-main :: IO ()
-main = let IntensionalIdentity set = example in putStrLn $ show set
+tests :: Test
+tests =
+  TestLabel "intensional indexed CYK closure" $ TestCase $
+    assertEqual "for intensional indexed CYK closure"
+        (Set.fromList
+            [ GrammarRule "AddL" "int" "+"
+            , GrammarRule "Add" "AddL" "int"
+            , GrammarRule "AddL" "Add" "+"
+            , ParsedSpan "int" 0 1
+            , ParsedSpan "AddL" 0 2
+            , ParsedSpan "Add" 0 3
+            , ParsedSpan "AddL" 0 4
+            , ParsedSpan "Add" 0 5
+            , ParsedSpan "+" 1 2
+            , ParsedSpan "int" 2 3
+            , ParsedSpan "AddL" 2 4
+            , ParsedSpan "Add" 2 5
+            , ParsedSpan "+" 3 4
+            , ParsedSpan "int" 4 5
+            ]
+        )
+        (let IntensionalIdentity facts = example in facts)

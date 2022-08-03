@@ -28,60 +28,16 @@ library:
   source-dirs: src
 
 executables:
-  intensional-naive-subtype-closure:
-    main:                Main.hs
-    source-dirs:         apps/intensional-naive-subtype-closure
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - intensional-functions-examples
-  intensional-indexed-subtype-closure:
-    main:                Main.hs
-    source-dirs:         apps/intensional-indexed-subtype-closure
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - intensional-functions-examples
-  extensional-indexed-subtype-closure:
-    main:                Main.hs
-    source-dirs:         apps/extensional-indexed-subtype-closure
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - intensional-functions-examples
-  intensional-naive-cyk-closure:
-    main:                Main.hs
-    source-dirs:         apps/intensional-naive-cyk-closure
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - intensional-functions-examples
-  intensional-indexed-cyk-closure:
-    main:                Main.hs
-    source-dirs:         apps/intensional-indexed-cyk-closure
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - intensional-functions-examples
-  extensional-indexed-cyk-closure:
-    main:                Main.hs
-    source-dirs:         apps/extensional-indexed-cyk-closure
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - intensional-functions-examples
+  {}
+  # intensional-naive-subtype-closure:
+  #   main:                Main.hs
+  #   source-dirs:         apps/intensional-naive-subtype-closure
+  #   ghc-options:
+  #   - -threaded
+  #   - -rtsopts
+  #   - -with-rtsopts=-N
+  #   dependencies:
+  #   - intensional-functions-examples
 
 tests:
   intensional-functions-examples-test:
