@@ -1,6 +1,6 @@
-name:                intensional-functions-examples
+name:                intensional-functions-closure-engine
 version:             0.1.0.0
-github:              "zepalmer/intensional-functions-examples"
+github:              "zepalmer/intensional-functions-closure-engine"
 license:             BSD3
 author:              "Zachary Palmer"
 maintainer:          "zep_github@bahj.com"
@@ -11,13 +11,13 @@ extra-source-files:
 - ChangeLog.md
 
 # Metadata used when publishing your package
-synopsis:            A set of examples demonstrating the use of intensional functions and algebraic structures.
+synopsis:            A library using intensional functions to define a flexible deductive closure engine.
 # category:            Web
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/zepalmer/intensional-functions-examples#readme>
+description:         Please see the README on GitHub at <https://github.com/zepalmer/intensional-functions-closure-engine#readme>
 
 dependencies:
 - base >= 4.15 && < 5
@@ -40,7 +40,7 @@ executables:
   #   - intensional-functions-examples
 
 tests:
-  intensional-functions-examples-test:
+  intensional-functions-closure-engine-test:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -48,5 +48,5 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - intensional-functions-examples
+    - intensional-functions-closure-engine
     - HUnit
