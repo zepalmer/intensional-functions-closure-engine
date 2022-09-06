@@ -98,8 +98,8 @@ instance () => IntensionalFunctor (EngineSuspensionFunctor fact) where
     itsFmap = \%%Ord f (EngineSuspensionFunctor idxfn key cont) ->
         EngineSuspensionFunctor idxfn key (itsCompose %@% (f,cont))
 
-type ComputationT m fact a =
-    CoroutineT Ord (EngineSuspensionFunctor fact) m a
+type ComputationT m fact =
+    CoroutineT Ord (EngineSuspensionFunctor fact) m
 
 type Computation m fact = ComputationT m fact (Set fact)
 
