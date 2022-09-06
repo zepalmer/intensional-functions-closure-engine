@@ -7,6 +7,7 @@
 
 module Closure.Intensional.Indexed.Engine
 ( Computation
+, ComputationT
 , Engine(..)
 , emptyEngine
 , addIndex
@@ -97,8 +98,10 @@ instance () => IntensionalFunctor (EngineSuspensionFunctor fact) where
     itsFmap = \%%Ord f (EngineSuspensionFunctor idxfn key cont) ->
         EngineSuspensionFunctor idxfn key (itsCompose %@% (f,cont))
 
-type Computation m fact =
-    CoroutineT Ord (EngineSuspensionFunctor fact) m (Set fact)
+type ComputationT m fact a =
+    CoroutineT Ord (EngineSuspensionFunctor fact) m a
+
+type Computation m fact = ComputationT m fact (Set fact)
 
 newtype SuspendedComputation m fact =
     SuspendedComputation (EngineSuspensionFunctor fact (Computation m fact))
