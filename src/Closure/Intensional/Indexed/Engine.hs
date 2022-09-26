@@ -16,6 +16,7 @@ module Closure.Intensional.Indexed.Engine
 , addFacts
 , isClosed
 , step
+, stepWithFacts
 , close
 , getIndexedFact
 , getAllIndexedFacts
@@ -400,13 +401,36 @@ step :: forall m fact.
         , Ord (Engine m fact)
         , IntensionalMonad m
         , IntensionalFunctorCF m ~ Ord
-        , IntensionalApplicativePureC m (Engine m fact)
+        , IntensionalFunctorMapC m (Engine m fact, Set fact) (Engine m fact)
+        , IntensionalApplicativePureC m (Engine m fact, Set fact)
+        , IntensionalMonadBindC m
+            (Either
+            (EngineSuspensionFunctor fact (Computation m fact))
+            (Set fact))
+            (Engine m fact, Set fact)
         )
      => Engine m fact
      -> m (Engine m fact)
-step engine =
+step engine = itsFmap %@% ((\%Ord (x,y) -> x), stepWithFacts engine)
+
+stepWithFacts :: forall m fact.
+                 ( Typeable fact
+                 , Ord fact
+                 , Ord (Engine m fact)
+                 , IntensionalMonad m
+                 , IntensionalFunctorCF m ~ Ord
+                 , IntensionalApplicativePureC m (Engine m fact, Set fact)
+                 , IntensionalMonadBindC m
+                      (Either
+                        (EngineSuspensionFunctor fact (Computation m fact))
+                        (Set fact))
+                      (Engine m fact, Set fact)
+                 )
+              => Engine m fact
+              -> m (Engine m fact, Set fact)
+stepWithFacts engine =
   case Set.minView $ workset engine of
-    Nothing -> itsPure %@ engine
+    Nothing -> itsPure %@ (engine, Set.empty)
     Just ( WorksetItem
               (arg :: arg)
               (action :: arg ->%Ord (Computation m fact))
@@ -418,17 +442,25 @@ step engine =
         let engine' = engine { workset = workset' }
         itsPure %$ case result of
           Left suspended ->
-            addSuspended (SuspendedComputation suspended) engine'
+            (addSuspended (SuspendedComputation suspended) engine', Set.empty)
           Right factSet ->
-            Set.foldr addFact engine' factSet
+            let newFacts = factSet `Set.difference` (facts engine) in
+            (Set.foldr addFact engine' newFacts, newFacts)
 
 close :: ( Typeable fact
          , Ord fact
          , Ord (Engine m fact)
          , IntensionalMonad m
          , IntensionalFunctorCF m ~ Ord
+         , IntensionalFunctorMapC m (Engine m fact, Set fact) (Engine m fact)
          , IntensionalApplicativePureC m (Engine m fact)
+         , IntensionalApplicativePureC m (Engine m fact, Set fact)
          , IntensionalMonadBindC m (Engine m fact) (Engine m fact)
+         , IntensionalMonadBindC m
+             (Either
+             (EngineSuspensionFunctor fact (Computation m fact))
+             (Set fact))
+             (Engine m fact, Set fact)
          )
       => Engine m fact -> m (Engine m fact)
 close engine =
