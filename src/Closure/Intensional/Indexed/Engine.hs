@@ -18,6 +18,7 @@ module Closure.Intensional.Indexed.Engine
 , step
 , close
 , getIndexedFact
+, getAllIndexedFacts
 , IndexingFunction(..)
 ) where
 
@@ -456,3 +457,18 @@ getIndexedFact :: forall m fact key derivative.
                     Ord (EngineSuspensionFunctor fact) m derivative
 getIndexedFact idxfn key =
     suspend (EngineSuspensionFunctor idxfn key itsPure)
+
+getAllIndexedFacts :: forall m fact key derivative.
+                      ( Typeable fact
+                      , Typeable key
+                      , Typeable derivative
+                      , Ord key
+                      , Ord derivative
+                      )
+                   => IndexingFunction fact key derivative
+                   -> key
+                   -> Engine m fact
+                   -> Set derivative
+getAllIndexedFacts idxfn key engine =
+    let wrappedFacts = IndexMultiMap.find idxfn key $ indexedFacts engine in
+    Set.map (\(FactIndexValue value) -> value) wrappedFacts
