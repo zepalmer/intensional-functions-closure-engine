@@ -85,7 +85,7 @@ contains :: forall c kf vf a.
             , Ord (kf a)
             )
          => kf a -> CDDMap c kf vf -> Bool
-contains k map = isJust $ Data.CDDMap.lookup k map
+contains k dict = isJust $ Data.CDDMap.lookup k dict
 
 fold :: forall c kf vf r.
         (forall a. (MappingConstraints c kf vf a)

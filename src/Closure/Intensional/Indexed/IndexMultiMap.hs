@@ -19,15 +19,13 @@ module Closure.Intensional.Indexed.IndexMultiMap
 , fold
 ) where
 
-import GHC.Exts (Constraint)
-
 import Data.Kind (Type)
 import Data.Map (Map)
 import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Data.Typeable (Typeable, cast, typeOf, eqT, (:~:)(..))
+import Data.Typeable (Typeable)
 
 import Closure.Intensional.Indexed.Types
 import qualified Data.CDDMap as CDDMap
@@ -50,10 +48,8 @@ newtype IndexingFunctionWrapper
         (keyAndDerivative :: Type) =
     IndexingFunctionWrapper
         (IndexingFunction fact (Fst keyAndDerivative) (Snd keyAndDerivative))
-deriving instance
-    (Eq k, Eq v) => Eq (IndexingFunctionWrapper fact (k, v))
-deriving instance
-    (Ord k, Ord v) => Ord (IndexingFunctionWrapper fact (k, v))
+deriving instance Eq (IndexingFunctionWrapper fact (k, v))
+deriving instance Ord (IndexingFunctionWrapper fact (k, v))
 
 type IndexMultiMapConstraints fact f a k v =
     ( k ~ IndexingFunctionWrapper fact a
@@ -161,9 +157,7 @@ add i k v (IndexMultiMap m) =
 find :: forall fact f key derivative.
         ( Typeable (key, derivative)
         , Typeable (IndexingFunctionWrapper fact)
-        , Typeable (FMultiMap f)
         , Ord key
-        , Ord derivative
         )
      => IndexingFunction fact key derivative
      -> key
@@ -187,9 +181,6 @@ find i k (IndexMultiMap m) =
 containsIndex :: forall fact f key derivative.
                  ( Typeable (key, derivative)
                  , Typeable (IndexingFunctionWrapper fact)
-                 , Typeable (FMultiMap f)
-                 , Ord key
-                 , Ord derivative
                  )
               => IndexingFunction fact key derivative
               -> IndexMultiMap fact f
@@ -207,9 +198,7 @@ containsIndex i (IndexMultiMap m) =
 contains :: forall fact f key derivative.
             ( Typeable (key, derivative)
             , Typeable (IndexingFunctionWrapper fact)
-            , Typeable (FMultiMap f)
             , Ord key
-            , Ord derivative
             , Ord (f derivative)
             )
          => IndexingFunction fact key derivative
@@ -262,7 +251,6 @@ fold fn acc imm =
                    , Typeable (FMultiMap f)
                    , IndexMultiMapConstraintsClass fact f
                            kv (IndexingFunctionWrapper fact kv) (FMultiMap f kv)
-                   , Ord (IndexingFunctionWrapper fact kv)
                    , Ord (FMultiMap f kv)
                    )
                 => acc

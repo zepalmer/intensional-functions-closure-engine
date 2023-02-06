@@ -26,6 +26,13 @@ dependencies:
 
 library:
   source-dirs: src
+  ghc-options:
+  - -Werror
+  - -Wall
+  - -Wcompat
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wredundant-constraints
 
 executables:
   {}
@@ -47,6 +54,12 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -Werror
+    - -Wall
+    - -Wcompat
+    - -Wincomplete-record-updates
+    - -Wincomplete-uni-patterns
+    - -Wredundant-constraints
     dependencies:
     - intensional-functions-closure-engine
     - HUnit

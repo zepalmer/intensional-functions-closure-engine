@@ -2,8 +2,8 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Data.TypeFunctions
-( Fst(..)
-, Snd(..)
+( Fst
+, Snd
 ) where
 
 import Data.Kind (Type)

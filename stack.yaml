@@ -8,7 +8,7 @@ resolver:
 
 # Using intensional functions GHC
 # NOTE: This should eventually point to a publicly visible repository.
-compiler: ghc-git-f179f9ab2dbb7ede6ba45d00aa45c3d8e74352dd-quick
+compiler: ghc-git-cac571902c6c34d6e7aca7f9d52dd63d15e4789d-quick
 compiler-repository: git.bahj.com:intensional-functions-ghc
 
 # User packages to be built.
@@ -17,4 +17,4 @@ packages: ["."]
 # Dependency packages to be pulled from upstream that are not in the resolver.
 extra-deps:
   - git: git.bahj.com:intensional-functions-lib
-    commit: d0a420dbdbff415a3fa7a848c6ce00e9f7a46d08
+    commit: 0054961c2209a51d0b6815a5eec839b0291cf93a

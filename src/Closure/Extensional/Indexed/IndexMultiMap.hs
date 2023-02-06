@@ -34,7 +34,6 @@ import Data.Typeable (Typeable, eqT, typeOf, (:~:)(..))
 import Closure.Extensional.Indexed.Types
 import qualified Data.CDDMap as CDDMap
 import Data.CDDMap (CDDMap)
-import Data.TypeFunctions
 
 -- ---------- External interface ----------------------------------------------
 
@@ -150,7 +149,6 @@ add i k v (IndexMultiMap m) =
 find :: forall fact f symbol.
         ( Typeable symbol
         , Typeable (IndexWrapper fact)
-        , Typeable (IndexMultiMapValue fact f)
         , Index fact symbol
         , Ord symbol
         , Ord (IndexKey fact symbol)
@@ -170,7 +168,6 @@ find i k (IndexMultiMap m) =
 containsIndex :: forall fact f symbol.
                  ( Typeable symbol
                  , Typeable (IndexWrapper fact)
-                 , Typeable (IndexMultiMapValue fact f)
                  , Index fact symbol
                  , Ord symbol
                  )
@@ -183,7 +180,6 @@ containsIndex i (IndexMultiMap m) =
 contains :: forall fact f symbol.
             ( Typeable symbol
             , Typeable (IndexWrapper fact)
-            , Typeable (IndexMultiMapValue fact f)
             , Index fact symbol
             , Ord symbol
             , Ord (IndexKey fact symbol)
@@ -204,7 +200,7 @@ contains i k v (IndexMultiMap m) =
 
 fold :: forall fact f acc.
         ()
-     => (forall symbol kv.
+     => (forall symbol.
             ( Typeable symbol
             , Typeable (IndexMultiMapValue fact f symbol)
             , Index fact symbol
@@ -224,7 +220,6 @@ fold :: forall fact f acc.
 fold fn acc (IndexMultiMap m) =
     let fn' :: forall symbol.
                ( Typeable symbol
-               , Typeable (IndexWrapper fact)
                , Typeable (IndexMultiMapValue fact f)
                , Index fact symbol
                , Ord (IndexKey fact symbol)

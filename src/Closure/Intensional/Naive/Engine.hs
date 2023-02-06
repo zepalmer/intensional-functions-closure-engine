@@ -45,9 +45,6 @@ data Engine m fact = Engine
   , workset :: Set (fact, SuspendedComputation m fact)
   }
 
-deriving instance (Eq (SuspendedComputation m fact))
-deriving instance (Ord (SuspendedComputation m fact))
-
 deriving instance (Eq fact) => Eq (Engine m fact)
 deriving instance (Ord fact) => Ord (Engine m fact)
 
@@ -83,11 +80,9 @@ addFact fact engine =
          }
 
 addFacts :: (Ord fact) => [fact] -> Engine m fact -> Engine m fact
-addFacts facts engine = foldr addFact engine facts
+addFacts newFacts engine = foldr addFact engine newFacts
 
-addSuspended :: ( Ord fact
-                , IntensionalFunctorCF m ~ Ord
-                )
+addSuspended :: ( Ord fact )
              => SuspendedComputation m fact
              -> Engine m fact
              -> Engine m fact
@@ -148,10 +143,3 @@ getFact :: ( Typeable fact
                 fact)
            ) => CoroutineT Ord (Await Ord fact) m fact
 getFact = await
-
-{-
-  intensional Ord do
-    x <- getFact
-    y <- getFact
-    itsPure %$ x + y
--}

@@ -152,7 +152,6 @@ combineFactWithIndex :: forall m fact symbol.
                         , Typeable fact
                         , Typeable symbol
                         , Index fact symbol
-                        , Ord fact
                         , Ord symbol
                         , Ord (IndexKey fact symbol)
                         , Ord (IndexDerivative fact symbol)
@@ -187,10 +186,7 @@ combineFactWithIndex fact idx engine =
 addIndex :: ( Typeable m
             , Typeable fact
             , Typeable symbol
-            , Typeable (IndexKey fact symbol)
-            , Typeable (IndexDerivative fact symbol)
             , Index fact symbol
-            , Ord fact
             , Ord symbol
             , Ord (IndexKey fact symbol)
             , Ord (IndexDerivative fact symbol)
@@ -255,7 +251,7 @@ addFact fact engine =
                -> ( IndexMultiMap fact FactIndexValue
                   , Set (WorksetItem m fact)
                   )
-        folder (newFactIndexMap, newWorksetItems) idx factMappings =
+        folder (newFactIndexMap, newWorksetItems) idx _ =
             case combineFactWithIndex fact idx engine of
                 Nothing -> (newFactIndexMap, newWorksetItems)
                 Just (key, derivative, newWorksetItems') ->
@@ -283,7 +279,7 @@ addFact fact engine =
 addFacts :: forall m fact.
             (Typeable m, Typeable fact, Ord fact)
          => [fact] -> Engine m fact -> Engine m fact
-addFacts facts engine = foldr addFact engine facts
+addFacts newFacts engine = foldr addFact engine newFacts
 
 addComputation :: forall m fact.
                   ( Typeable m
@@ -307,7 +303,6 @@ addSuspended :: forall m fact symbol computation.
                 , Typeable fact
                 , Typeable symbol
                 , Typeable computation
-                , Typeable (IndexKey fact symbol)
                 , Typeable (IndexDerivative fact symbol)
                 , Ord symbol
                 , Ord (computation (IndexDerivative fact symbol))
@@ -391,8 +386,8 @@ onIndex :: forall m fact symbol computation.
         -> IndexKey fact symbol
         -> computation (IndexDerivative fact symbol)
         -> ComputationStepResult m fact
-onIndex index key computation =
-    ComputationContinues $ SuspendedComputation index key computation
+onIndex idx key computation =
+    ComputationContinues $ SuspendedComputation idx key computation
 
 finished :: forall m fact. Set fact -> ComputationStepResult m fact
-finished facts = ComputationFinished facts
+finished newFacts = ComputationFinished newFacts
