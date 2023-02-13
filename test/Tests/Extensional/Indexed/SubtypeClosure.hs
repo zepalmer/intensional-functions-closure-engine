@@ -90,4 +90,4 @@ tests =
             , "wolfhound" :<: "mammal"
             ]
         )
-        (let Identity facts = example in facts)
+        (let Identity resultFacts = example in resultFacts)

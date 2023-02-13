@@ -79,4 +79,4 @@ tests =
             , ParsedSpan "int" 4 5
             ]
         )
-        (let IntensionalIdentity facts = example in facts)
+        (let IntensionalIdentity resultFacts = example in resultFacts)

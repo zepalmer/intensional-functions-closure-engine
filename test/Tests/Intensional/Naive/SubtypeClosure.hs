@@ -64,4 +64,4 @@ tests =
             , "wolfhound" :<: "mammal"
             ]
         )
-        (let IntensionalIdentity facts = example in facts)
+        (let IntensionalIdentity resultFacts = example in resultFacts)

@@ -106,4 +106,4 @@ tests =
             , ParsedSpan "int" 4 5
             ]
         )
-        (let Identity facts = example in facts)
+        (let Identity resultFacts = example in resultFacts)
