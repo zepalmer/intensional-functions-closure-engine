@@ -20,6 +20,7 @@ module Closure.Intensional.Indexed.Engine
 , close
 , getIndexedFact
 , getAllIndexedFacts
+, getAllFacts
 , addIntermediateComputation
 , addIntermediateFact
 , addIntermediateFacts
@@ -806,6 +807,9 @@ getAllIndexedFacts :: forall m fact key derivative.
 getAllIndexedFacts idxfn key engine =
     let wrappedFacts = IndexMultiMap.find idxfn key $ indexedFacts engine in
     Set.map (\(FactIndexValue value) -> value) wrappedFacts
+
+getAllFacts :: forall m fact. Engine m fact -> Set fact
+getAllFacts engine = facts engine
 
 addIntermediateComputation :: forall m fact.
                               ( IntensionalFunctorCF m ~ Ord
