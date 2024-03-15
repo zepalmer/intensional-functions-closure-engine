@@ -15,16 +15,22 @@ module Closure.Extensional.Indexed.Engine
 , Engine(..)
 , emptyEngine
 , Closure.Extensional.Indexed.Engine.addIndex
+, addComputation
+, addComputations
 , addFact
 , addFacts
-, addComputation
+, isClosed
 , step
+, stepWithFacts
 , close
+, getAllIndexedFacts
 , onIndex
 , finished
+, computationResults
 )
 where
 
+import Control.Monad
 import Data.Function ((&))
 import Data.Kind (Type)
 import Data.Set (Set)
@@ -65,7 +71,7 @@ class (Monad m) =>
     compute :: forall input.
                computation input
             -> input
-            -> m (ComputationStepResult m fact)
+            -> m [ComputationStepResult m fact]
 
 newtype FactIndexValue v
     = FactIndexValue v
@@ -298,6 +304,22 @@ addComputation computation engine = do
         ComputationFinished factSet ->
             Set.foldr addFact engine factSet
 
+addComputations :: forall m fact.
+                   ( Typeable m
+                   , Typeable fact
+                   , Monad m
+                   , Ord fact
+                   )
+                => m [ComputationStepResult m fact]
+                -> Engine m fact
+                -> m (Engine m fact)
+addComputations computationsM engine = do
+    computations <- computationsM
+    foldM
+      (\curEngine computation -> addComputation (pure computation) curEngine)
+      engine
+      computations
+
 addSuspended :: forall m fact symbol computation.
                 ( Typeable m
                 , Typeable fact
@@ -344,20 +366,38 @@ addSuspended suspended engine =
                    , workset = Set.union newWorksetItems $ workset engine
                    }
 
-step :: (Typeable m, Typeable fact, Monad m, Ord fact)
-     => Engine m fact -> m (Engine m fact)
-step engine =
+stepWithFacts :: (Typeable m, Typeable fact, Monad m, Ord fact)
+              => Engine m fact -> m (Engine m fact, Set fact)
+stepWithFacts engine =
   case Set.minView $ workset engine of
-    Nothing -> return engine
+    Nothing -> return (engine, Set.empty)
     Just ( WorksetItem arg action, workset' ) ->
       do
-        result <- compute action arg
+        results <- compute action arg
         let engine' = engine { workset = workset' }
-        return $ case result of
-          ComputationContinues suspended ->
-            addSuspended suspended engine'
-          ComputationFinished factSet ->
-            Set.foldr addFact engine' factSet
+        let allNewFacts =
+              Set.unions $
+              results &
+                map (\result ->
+                      case result of
+                        ComputationContinues _ -> Set.empty
+                        ComputationFinished factSet -> factSet
+                    )
+        engine'' <-
+          foldM
+            (\curEngine result ->
+                pure $ case result of
+                ComputationContinues suspended ->
+                    addSuspended suspended curEngine
+                ComputationFinished factSet ->
+                    Set.foldr addFact curEngine factSet
+            )
+            engine' results
+        pure (engine'', allNewFacts)
+
+step :: (Typeable m, Typeable fact, Monad m, Ord fact)
+     => Engine m fact -> m (Engine m fact)
+step engine = fst <$> stepWithFacts engine
 
 isClosed :: Engine m fact -> Bool
 isClosed engine = Set.null $ workset engine
@@ -369,6 +409,22 @@ close engine =
         do
             engine' <- step engine
             close engine'
+
+getAllIndexedFacts :: forall m fact symbol.
+                      ( Typeable symbol
+                      , Typeable fact
+                      , Index fact symbol
+                      , Ord symbol
+                      , Ord (IndexKey fact symbol)
+                      , Ord (IndexDerivative fact symbol)
+                      )
+                   => symbol
+                   -> IndexKey fact symbol
+                   -> Engine m fact
+                   -> Set (IndexDerivative fact symbol)
+getAllIndexedFacts idx key engine =
+    Set.map (\(FactIndexValue v) -> v) $
+    IndexMultiMap.find idx key (indexedFacts engine)
 
 onIndex :: forall m fact symbol computation.
            ( Typeable symbol
@@ -385,9 +441,34 @@ onIndex :: forall m fact symbol computation.
         => symbol
         -> IndexKey fact symbol
         -> computation (IndexDerivative fact symbol)
-        -> ComputationStepResult m fact
+        -> [ComputationStepResult m fact]
 onIndex idx key computation =
-    ComputationContinues $ SuspendedComputation idx key computation
+    [ComputationContinues $ SuspendedComputation idx key computation]
 
-finished :: forall m fact. Set fact -> ComputationStepResult m fact
-finished newFacts = ComputationFinished newFacts
+finished :: forall m fact. Set fact -> [ComputationStepResult m fact]
+finished newFacts = [ComputationFinished newFacts]
+
+computationResults ::
+  forall m fact symbol computation.
+      ( Typeable symbol
+      , Typeable computation
+      , Typeable (IndexKey fact symbol)
+      , Typeable (IndexDerivative fact symbol)
+      , Index fact symbol
+      , Computation m fact computation
+      , Ord symbol
+      , Ord (IndexKey fact symbol)
+      , Ord (IndexDerivative fact symbol)
+      , Ord (computation (IndexDerivative fact symbol))
+      )
+   => [ ( symbol
+        , IndexKey fact symbol
+        , computation (IndexDerivative fact symbol)
+        )
+      ]
+   -> Set fact
+   -> [ComputationStepResult m fact]
+computationResults continuations factSet =
+  (ComputationFinished factSet) :
+    (continuations & concatMap
+      (\(symbol,key,computation) -> onIndex symbol key computation))

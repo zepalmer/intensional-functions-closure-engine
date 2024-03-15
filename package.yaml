@@ -4,7 +4,7 @@ github:              "zepalmer/intensional-functions-closure-engine"
 license:             BSD3
 author:              "Zachary Palmer"
 maintainer:          "zep_github@bahj.com"
-copyright:           "2021-2022 Zachary Palmer"
+copyright:           "2021-2024 Zachary Palmer"
 
 extra-source-files:
 - README.md
