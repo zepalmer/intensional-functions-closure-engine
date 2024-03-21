@@ -3,7 +3,7 @@ resolver:
   url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/19/0.yaml
 
 # Using intensional functions GHC
-compiler: ghc-git-2ec8e0ddb0cf3efb11105b19364f2bc745edc84a-quick
+compiler: ghc-git-12cb0cf2e6eb91ec7a97f1cd05f6682b34cb9d97-quick
 compiler-repository: https://github.com/zepalmer/intensional-functions-ghc.git
 
 # User packages to be built.
@@ -12,4 +12,4 @@ packages: ["."]
 # Dependency packages to be pulled from upstream that are not in the resolver.
 extra-deps:
   - git: https://github.com/zepalmer/intensional-functions-lib.git
-    commit: 74db3a67cb65661d75f59af3c7d6233faab11514
+    commit: 3ed99513f26b6c8feec6bc6b57e9544a636ff759
