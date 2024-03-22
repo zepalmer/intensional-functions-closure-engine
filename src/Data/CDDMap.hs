@@ -111,13 +111,13 @@ instance Ord (CDDMap c kf vf) where
                     case nodes2 of
                         [] -> EQ
                         Empty : nodes2' -> loop nodes1 nodes2'
-                        Node _ _ _ _ : _ -> LT
+                        Node _ _ _ _ _ : _ -> LT
                 Empty : nodes1' -> loop nodes1' nodes2
-                Node (k1 :: k1) (v1 :: v1) _ _ : nodes1' ->
+                Node (k1 :: k1) (v1 :: v1) _ _ _ : nodes1' ->
                     case nodes2 of
                         [] -> GT
                         Empty : nodes2' -> loop nodes1 nodes2'
-                        Node (k2 :: k2) (v2 :: v2) _ _ : nodes2' ->
+                        Node (k2 :: k2) (v2 :: v2) _ _ _ : nodes2' ->
                             let result =
                                   case eqT of
                                     Just (Refl :: (k1,v1) :~: (k2,v2)) ->
@@ -144,28 +144,90 @@ data CDDMapNode
          -> vf a
          -> CDDMapNode c kf vf
          -> CDDMapNode c kf vf
+         -> Int
          -> CDDMapNode c kf vf
 
 emptyNode :: CDDMapNode c kf vf
 emptyNode = Empty
+
+nodeHeight :: CDDMapNode c kf vf -> Int
+nodeHeight Empty = -1
+nodeHeight (Node _ _ _ _ h) = h
 
 insertNode :: forall c kf vf a.
               (MappingConstraints c kf vf a)
            => kf a -> vf a -> CDDMapNode c kf vf -> CDDMapNode c kf vf
 insertNode k v node =
     case node of
-        Empty -> Node k v Empty Empty
-        Node (k' :: kf a') v' l r ->
+        Empty -> Node k v Empty Empty 0
+        Node (k' :: kf a') v' l r h ->
             case eqT of
                 Just (Refl :: kf a :~: kf a') ->
-                    if k < k' then Node k' v' (insertNode k v l) r else
-                    if k > k' then Node k' v' l (insertNode k v r) else
-                    Node k v l r
+                    if k < k' then balance k' v' (insertNode k v l) r else
+                    if k > k' then balance k' v' l (insertNode k v r) else
+                    Node k v l r h
                 Nothing ->
                     if typeOf k < typeOf k' then
-                        Node k' v' (insertNode k v l) r
+                        balance k' v' (insertNode k v l) r
                     else
-                        Node k' v' l (insertNode k v r)
+                        balance k' v' l (insertNode k v r)
+    where
+        balance :: forall a'. (MappingConstraints c kf vf a')
+                => kf a'
+                -> vf a'
+                -> CDDMapNode c kf vf
+                -> CDDMapNode c kf vf
+                -> CDDMapNode c kf vf
+        balance k' v' l r =
+            case l of
+                Empty ->
+                    case r of
+                        Empty -> Node k' v' l r 0
+                        Node _ _ _ _ hr ->
+                            if hr == 0 then Node k' v' l r 1 else
+                                rotateLeft k' v' Empty r
+                Node kl vl ll rl hl ->
+                    case r of
+                        Empty ->
+                            if hl == 0 then Node k' v' l r 1 else
+                                rotateRight k' v' l Empty
+                        Node kr vr lr rr hr ->
+                            if hl > hr + 1 then
+                                if nodeHeight ll < nodeHeight rl then
+                                    rotateRight k' v' (rotateLeft kl vl ll rl) r
+                                else
+                                    rotateRight k' v' l r
+                            else if hr > hl + 1 then
+                                if nodeHeight rr < nodeHeight lr then
+                                    rotateLeft k' v' l (rotateRight kr vr lr rr)
+                                else
+                                    rotateLeft k' v' l r
+                            else
+                                Node k' v' l r (max hl hr + 1)
+        rotateLeft :: forall a'. (MappingConstraints c kf vf a')
+                   => kf a'
+                   -> vf a'
+                   -> CDDMapNode c kf vf
+                   -> CDDMapNode c kf vf
+                   -> CDDMapNode c kf vf
+        rotateLeft _ _ _ Empty =
+            error "Internal error: invariant violation in AVL rotateLeft"
+        rotateLeft k' v' l (Node kr vr lr rr _) =
+            let l'h = max (nodeHeight l) (nodeHeight lr) + 1 in
+            let l' = Node k' v' l lr l'h in
+            Node kr vr l' rr (max l'h (nodeHeight rr) + 1)
+        rotateRight :: forall a'. (MappingConstraints c kf vf a')
+                    => kf a'
+                    -> vf a'
+                    -> CDDMapNode c kf vf
+                    -> CDDMapNode c kf vf
+                    -> CDDMapNode c kf vf
+        rotateRight _ _ Empty _ =
+            error "Internal error: invariant violation in AVL rotateRight"
+        rotateRight k' v' (Node kl vl ll rl _) r =
+            let r'h = max (nodeHeight rl) (nodeHeight r) + 1 in
+            let r' = Node k' v' rl r r'h in
+            Node kl vl ll r' (max (nodeHeight ll) r'h)
 
 getFromNode :: forall c kf vf a.
                ( Typeable a
@@ -176,7 +238,7 @@ getFromNode :: forall c kf vf a.
 getFromNode k node =
     case node of
         Empty -> Nothing
-        Node (k' :: kf a') v' l r ->
+        Node (k' :: kf a') v' l r _ ->
             case eqT of
                 Just (Refl :: kf a :~: kf a') ->
                     if k < k' then getFromNode k l else
@@ -198,7 +260,7 @@ foldOnNode :: forall c kf vf acc.
 foldOnNode fn acc node =
     case node of
         Empty -> acc
-        Node k v l r ->
+        Node k v l r _ ->
             let acc' = foldOnNode fn acc l in
             let acc'' = fn acc' k v in
             let acc''' = foldOnNode fn acc'' r in
@@ -208,4 +270,4 @@ iterateNodes :: forall c kf vf. CDDMapNode c kf vf -> [CDDMapNode c kf vf]
 iterateNodes root =
     case root of
         Empty -> []
-        Node _ _ l r -> List.concat [iterateNodes l, [root], iterateNodes r]
+        Node _ _ l r _ -> List.concat [iterateNodes l, [root], iterateNodes r]
