@@ -41,13 +41,13 @@ instance Computation Identity SubtypeConstraint Transitivity where
             let c = input in
             return $ finished $ Set.singleton $ a :<: c
 
-transitivity :: Identity (ComputationStepResult Identity SubtypeConstraint)
+transitivity :: Identity [ComputationStepResult Identity SubtypeConstraint]
 transitivity = return $ onIndex IdentityIndex () TransitivityStep1
 
 example :: Identity (Set SubtypeConstraint)
 example = do
     initialEngine <-
-        addComputation transitivity $
+        addComputations transitivity $
             addIndex LowerBoundIndex $
             addIndex IdentityIndex $
             (emptyEngine :: Engine Identity SubtypeConstraint)

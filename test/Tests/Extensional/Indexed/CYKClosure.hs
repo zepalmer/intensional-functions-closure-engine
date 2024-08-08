@@ -63,12 +63,12 @@ instance Computation Identity Fact ClosureStep where
             let x = input in
             return $ finished $ Set.singleton $ ParsedSpan x i k
 
-closure :: Identity (ComputationStepResult Identity Fact)
+closure :: Identity [ComputationStepResult Identity Fact]
 closure = return $ onIndex IndexParsedSpans () ClosureStep1
 
 example :: Identity (Set Fact)
 example = do
-    initialEngine <- addComputation closure $
+    initialEngine <- addComputations closure $
                         addIndex IndexParsedSpans $
                         addIndex IndexParsedSpansByStartPosition $
                         addIndex IndexGrammarRulesByProduction $ emptyEngine
